@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: libros-service
+  namespace: biblioteca
+  labels:
+    app: libros-service
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: libros-service
+  template:
+    metadata:
+      labels:
+        app: libros-service
+    spec:
+      containers:
+        - name: libros-service
+          image: libros-service:1.0.0
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8081
+          env:
+            - name: LIBROS_DELAY_MS
+              value: "0"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: libros-service
+  namespace: biblioteca
+  labels:
+    app: libros-service
+spec:
+  type: NodePort
+  selector:
+    app: libros-service
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+      nodePort: 30081

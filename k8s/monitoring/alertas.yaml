@@ -1,0 +1,57 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: biblioteca-alertas
+  namespace: biblioteca
+  labels:
+    app: biblioteca
+spec:
+  groups:
+    - name: biblioteca.disponibilidad
+      rules:
+        - alert: LibrosServiceCaido
+          expr: up{job="libros-service", namespace="biblioteca"} == 0 or absent(up{job="libros-service", namespace="biblioteca"})
+          for: 30s
+          labels:
+            severity: critical
+          annotations:
+            summary: "libros-service está caído"
+            description: "El servicio de libros no responde. Sin él no se pueden validar libros ni conceder préstamos, por lo que prestamos-service no puede operar."
+
+        - alert: PrestamosServiceCaido
+          expr: up{job="prestamos-service", namespace="biblioteca"} == 0 or absent(up{job="prestamos-service", namespace="biblioteca"})
+          for: 30s
+          labels:
+            severity: critical
+          annotations:
+            summary: "prestamos-service está caído"
+            description: "El servicio de préstamos no responde. Los socios no pueden solicitar ni devolver libros en la biblioteca."
+
+    - name: biblioteca.negocio
+      rules:
+        - alert: LibrosLentoOConTimeouts
+          expr: increase(prestamos_libros_errores_total[1m]) > 2
+          for: 30s
+          labels:
+            severity: warning
+          annotations:
+            summary: "Préstamos está sufriendo timeouts contra libros-service"
+            description: "Más de 2 llamadas a libros fallaron o superaron el tiempo límite en el último minuto. Se están rechazando préstamos por lentitud o caída de libros."
+
+        - alert: CopiasTotalesBajas
+          expr: libros_copias_disponibles < 20
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "El número total de copias disponibles en la biblioteca es bajo"
+            description: "Quedan menos de 20 copias disponibles en total en el catálogo. Se requiere gestionar devoluciones o reponer ejemplares antes de agotar existencias."
+
+        - alert: PrestamosRechazadosSinCopias
+          expr: increase(libros_prestamos_rechazados_total[2m]) > 3
+          for: 30s
+          labels:
+            severity: warning
+          annotations:
+            summary: "Muchos préstamos rechazados por falta de copias"
+            description: "Más de 3 préstamos fueron rechazados en 2 minutos por copias agotadas. Los socios solicitan títulos sin disponibilidad."

@@ -1,0 +1,25 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: prestamos-service
+
+libros:
+  url: ${LIBROS_URL:http://localhost:8081}
+  timeout-ms: ${LIBROS_TIMEOUT_MS:2000}
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: prometheus
+      path-mapping:
+        prometheus: metrics
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    tags:
+      application: prestamos-service

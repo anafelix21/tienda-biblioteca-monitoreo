@@ -1,0 +1,12 @@
+target/
+*.class
+.idea/
+*.iml
+.vscode/
+.portforward.pids
+*.log
+*.tmp
+temp_*.json
+pedido*.json
+prestamo*.json
+reponer*.json

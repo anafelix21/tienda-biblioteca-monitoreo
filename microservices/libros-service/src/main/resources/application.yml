@@ -1,0 +1,25 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: libros-service
+
+# Delay artificial (para la casuistica 2). Se controla con la variable de entorno LIBROS_DELAY_MS
+libros:
+  delay-ms: ${LIBROS_DELAY_MS:0}
+
+management:
+  endpoints:
+    web:
+      base-path: /            # Rutas en la raiz: /metrics
+      exposure:
+        include: prometheus   # Exponemos el endpoint de Prometheus
+      path-mapping:
+        prometheus: metrics   # Renombra /prometheus -> /metrics
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true   # Necesario para p95 en PromQL
+    tags:
+      application: libros-service
